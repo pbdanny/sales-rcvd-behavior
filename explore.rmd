@@ -1,0 +1,37 @@
+# Initialise Project
+```{r adjust_directory_if_needed}
+# Uncomment lines below if rmd file is placed in a subdirectory
+# library(knitr)
+# opts_knit$set(root.dir = normalizePath('../')) 
+```
+
+```{r load_project, echo = FALSE}
+# 1. Set options in config/global.dcf
+# 2. Load packages listed in config/global.dcf
+# 3. Import functions and coe in lib directory
+# 4. Load data in data directory
+# 5. Run data manipulations in munge directory 
+
+rm(list = ls()) # optionally refresh workspaces
+library(ProjectTemplate); load.project()
+```             
+
+# Explore
+## Rcvd by week of year, colored by month
+```{r rcvd by week of year, echo = FALSE}
+library(plotly)
+
+g <- ggplot(data = oss_rcvd,
+       aes(x = no_week_of_year, fill = as.factor(month))) +
+    geom_histogram(stat = "count")
+ggplotly(g)
+```
+
+## Rcvd by week of year, colored by month
+```{r rcvd by source code, echo = FALSE}
+g <- ggplot(data = subset(oss_rcvd),
+            aes(x = no_week_of_year, fill = as.factor(source_code))) +
+    geom_histogram(stat = "count", position = "stack")
+ggplotly(g)
+```
+
