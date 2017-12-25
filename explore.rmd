@@ -35,3 +35,64 @@ g <- ggplot(data = subset(oss_rcvd),
 ggplotly(g)
 ```
 
+## Recency by week, number of last submit week and number of the week before last submit (current week = 51)
+```{r recency by week, echo = FALSE}
+# use split, apply and combine to create dataframe of recency
+rcvd_list <- split(oss_rcvd, oss_rcvd$agent_code)
+recency_list <- lapply(rcvd_list, FUN = findRecency)
+recency <- do.call(rbind, recency_list)
+# clear temp varibles
+rm(list = c("rcvd_list", "recency_list"))
+```
+
+## Some EDA on recency
+```{r recency EDA, echo = FALSE}
+ggplot(data = recency,
+       aes(x = diff_last)) +
+    geom_histogram(breaks = seq(1, 50, 1))
+
+ggplot(data = recency,
+       aes(x = diff_lag1)) +
+    geom_histogram(breaks = seq(1, 50, 1))
+```
+
+## Summary by day of week (Mon = 1 .. Sun = 7)
+## Summary by weekly 
+```{r summary by week, echo = FALSE}
+# Pre summarise dataframe
+summary_by_week <- oss_rcvd %>%
+    dplyr::select(-date) %>%
+    group_by(agent_code, no_week_of_year, day_of_week) %>%
+    summarise(submit = n())
+# rcvd by day by week
+rcvd_day_of_week <- summary_by_week %>%
+    group_by(agent_code, day_of_week) %>%
+    summarise(avg_time_by_day_of_week = n(),
+              avg_submit_by_day_of_week = mean(submit))
+
+# spread from long to wide format
+# time submit by day of week
+time_day_of_week <- rcvd_day_of_week %>%
+    mutate(key_column_name = paste0(day_of_week, "_time")) %>%
+    select(-avg_submit_by_day_of_week, -day_of_week) %>%
+    spread(key = key_column_name, value = avg_time_by_day_of_week)
+
+# avg submit by day of week
+avg_submit_day_of_week <- rcvd_day_of_week %>%
+    mutate(key_column_name = paste0(day_of_week, "_submit")) %>%
+    select(-avg_time_by_day_of_week, -day_of_week) %>%
+    spread(key = key_column_name, value = avg_submit_by_day_of_week)
+
+# rcvd by weekly
+rcvd_by_week <- summary_by_week %>%
+    group_by(agent_code, no_week_of_year) %>%
+    summarise(time_by_week = n(), 
+              submit_by_week = sum(submit)) %>%
+    group_by(agent_code) %>%
+    summarise(avg_time_by_week = mean(time_by_week),
+              avg_submit_by_week = mean(submit_by_week))
+
+rm(list = c("summary_by_week","rcvd_day_of_week"))
+```
+
+
