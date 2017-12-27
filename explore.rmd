@@ -61,7 +61,7 @@ ggplot(data = recency,
 ```{r summary by week, echo = FALSE}
 # Pre summarise dataframe
 summary_by_week <- oss_rcvd %>%
-    dplyr::select(-date) %>%
+    dplyr::select(-date) %>%  # exclude data since problems group_by
     group_by(agent_code, no_week_of_year, day_of_week) %>%
     summarise(submit = n())
 # rcvd by day by week
@@ -75,13 +75,15 @@ rcvd_day_of_week <- summary_by_week %>%
 time_day_of_week <- rcvd_day_of_week %>%
     mutate(key_column_name = paste0(day_of_week, "_time")) %>%
     select(-avg_submit_by_day_of_week, -day_of_week) %>%
-    spread(key = key_column_name, value = avg_time_by_day_of_week)
+    spread(key = key_column_name, value = avg_time_by_day_of_week,
+           fill = 0)  # fill 0 if no data
 
 # avg submit by day of week
 avg_submit_day_of_week <- rcvd_day_of_week %>%
     mutate(key_column_name = paste0(day_of_week, "_submit")) %>%
     select(-avg_time_by_day_of_week, -day_of_week) %>%
-    spread(key = key_column_name, value = avg_submit_by_day_of_week)
+    spread(key = key_column_name, value = avg_submit_by_day_of_week,
+           fill = 0)  # fill 0 if no data
 
 # rcvd by weekly
 rcvd_by_week <- summary_by_week %>%
@@ -95,4 +97,16 @@ rcvd_by_week <- summary_by_week %>%
 rm(list = c("summary_by_week","rcvd_day_of_week"))
 ```
 
+## product, bundle preference
+
+```{r product & bundle, echo = FALSE}
+prod_per <- oss_rcvd %>%
+    dplyr::select(-date) %>%
+    group_by(agent_code) %>%
+    summarise(tt_cc = sum(product == "CC"),
+              tt_pl = sum(product == "REV"),
+              tt_bundle = sum(bundle == "Y"),
+              per_cc = tt_cc/n(),
+              per_bundle = tt_bundle/n())
+```
 
