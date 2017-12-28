@@ -97,10 +97,22 @@ rcvd_by_week <- summary_by_week %>%
 rm(list = c("summary_by_week","rcvd_day_of_week"))
 ```
 
-## product, bundle preference
+## EDA on time, submit by day of week and by week
 
+```{r eda time and submit, echo = FALSE}
+time_day_of_week %>%
+    gather(day_of_week, time, Fri_time:Wed_time) %>%
+    mutate(day_of_week_f = factor(day_of_week, levels = 
+            c("Mon_time", "Tue_time", "Wed_time", "Thu_time", "Fri_time", "Sat_time"))) %>%
+    ggplot(aes(x = time)) +
+    geom_histogram() +
+    facet_grid(. ~ day_of_week_f) 
+```
+
+
+## product, bundle preference
 ```{r product & bundle, echo = FALSE}
-prod_per <- oss_rcvd %>%
+prod_bundle_per <- oss_rcvd %>%
     dplyr::select(-date) %>%
     group_by(agent_code) %>%
     summarise(tt_cc = sum(product == "CC"),
