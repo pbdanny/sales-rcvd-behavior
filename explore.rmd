@@ -5,7 +5,7 @@
 # opts_knit$set(root.dir = normalizePath('../')) 
 ```
 
-```{r load_project, echo = FALSE}
+```{r load_project, echo = FALSE, message = FALSE}
 # 1. Set options in config/global.dcf
 # 2. Load packages listed in config/global.dcf
 # 3. Import functions and coe in lib directory
@@ -102,15 +102,29 @@ rm(list = c("summary_by_week","rcvd_day_of_week"))
 ```{r eda time and submit, echo = FALSE}
 time_day_of_week %>%
     gather(day_of_week, time, Fri_time:Wed_time) %>%
+    filter(time > 0) %>%
     mutate(day_of_week_f = factor(day_of_week, levels = 
             c("Mon_time", "Tue_time", "Wed_time", "Thu_time", "Fri_time", "Sat_time"))) %>%
-    ggplot(aes(x = time)) +
+    ggplot(aes(x = time, color = day_of_week_f)) +
+    geom_freqpoly(binwidth = 1) +
+    ggtitle(label = "Number of agent submit by time in each day of week") + 
+    scale_x_continuous(breaks = seq(1, 10, 1), labels = seq(1, 10, 1), limits = c(1, 20)) +
+    ggsave(filename = "eda_1.jpeg", path = "./reports")
+    
+avg_submit_day_of_week %>%
+    gather(day_of_week, submit, Fri_submit:Wed_submit) %>%
+    filter(submit > 0) %>%
+    mutate(day_of_week_f = factor(day_of_week, levels = 
+            c("Mon_submit", "Tue_submit", "Wed_submit", "Thu_submit", "Fri_submit", "Sat_submit"))) %>%
+    ggplot(aes(x = submit, fill = day_of_week_f)) +
     geom_histogram() +
-    facet_grid(. ~ day_of_week_f) 
+    facet_grid(. ~ day_of_week_f) +
+    ggtitle(label = "Nubmer of agent submit by number app. in each day of week") + 
+    ggsave(file = "eda_2.jpeg", path = "./reports")
 ```
 
-
 ## product, bundle preference
+
 ```{r product & bundle, echo = FALSE}
 prod_bundle_per <- oss_rcvd %>%
     dplyr::select(-date) %>%
@@ -121,4 +135,24 @@ prod_bundle_per <- oss_rcvd %>%
               per_cc = tt_cc/n(),
               per_bundle = tt_bundle/n())
 ```
+
+
+## EDA on Contribution by Products / Bundle
+```{r eda product and bundle, echo = FALSE}
+prod_bundle_per %>%
+    filter(tt_cc > 0, tt_pl > 0) %>%
+    ggplot(aes(x = per_cc)) +
+    geom_histogram() +
+    ggtitle("Number of agent by Percent submit Credit Card / Total") +
+    ggsave(file = "eda_3.jpeg", path = "./reports")
+
+prod_bundle_per %>%
+    filter(tt_cc > 0, tt_pl > 0) %>%
+    ggplot(aes(x = per_bundle)) +
+    geom_histogram() +
+    ggtitle("Number of agent by Percent submit Bundle / Total") +
+    ggsave(file = "eda_4.jpeg", path = "./reports")
+
+```
+
 
