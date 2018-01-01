@@ -41,6 +41,8 @@ ggplotly(g)
 rcvd_list <- split(oss_rcvd, oss_rcvd$agent_code)
 recency_list <- lapply(rcvd_list, FUN = findRecency)
 recency <- do.call(rbind, recency_list)
+recency$agent_code <- as.integer(rownames(recency))
+rownames(recency) <- NULL
 # clear temp varibles
 rm(list = c("rcvd_list", "recency_list"))
 ```
@@ -131,6 +133,7 @@ prod_bundle_per <- oss_rcvd %>%
     group_by(agent_code) %>%
     summarise(tt_cc = sum(product == "CC"),
               tt_pl = sum(product == "REV"),
+              tt_submit = n(),
               tt_bundle = sum(bundle == "Y"),
               per_cc = tt_cc/n(),
               per_bundle = tt_bundle/n())
@@ -155,4 +158,84 @@ prod_bundle_per %>%
 
 ```
 
+## combine all featues
+```{r combine features, echo = FALSE}
+d <- avg_submit_day_of_week %>%
+    left_join(time_day_of_week) %>%
+    left_join(recency) %>%
+    left_join(rcvd_by_week) %>%
+    left_join(prod_bundle_per)
+
+df <- as.data.frame(d)
+df$agent_code <- as.character(df$agent_code)
+rm(list = c("d","avg_submit_day_of_week", "prod_bundle_per", "rcvd_by_week", "recency", "time_day_of_week"))
+```
+
+# Clustering
+## Hierarchical
+```{r hierarchical, echo = FALSE}
+# normalization
+rownames(df) <- df$agent_code
+df$agent_code <- NULL
+df_norm <- as.data.frame(scale(df))
+
+# distance calculation
+dist <- dist(df_norm, method = "euclidean")
+
+# hierarchical clustering
+clust <- hclust(dist, method = "ward.D")
+
+# create clustering group by cutting tree
+# repeating choose cluster group 3, 4, 5
+clust_group <- cutree(clust, k = 5)
+table(clust_group)
+
+# map back data and cluster for recheck clustering efficiency
+rcvd_clust <- cbind(df, clust_group)
+```
+
+## EDA clustering efficiency
+```{r cluster efficiency, echo = FALSE}
+clust_sum <- sapply(split(rcvd_clust, rcvd_clust$clust_gropu), colMeans)
+View(clust_sum)
+
+rcvd_clust %>%
+    ggplot(aes(y = per_bundle, x = clust_group, group = clust_group)) +
+    geom_boxplot()
+# group '4' rarely bundle
+
+rcvd_clust %>%
+    ggplot(aes(y = Tue_time, x = clust_group, group = clust_group)) +
+    geom_boxplot()
+# group '2' in consistant submit
+
+rcvd_clust %>%
+    ggplot(aes(y = Mon_submit, x = clust_group, group = clust_group)) +
+    geom_boxplot()
+# group '5' high performance
+
+rcvd_clust %>%
+    ggplot(aes(y = diff_last, x = clust_group, group = clust_group)) +
+    geom_boxplot()
+# group '1' dormant
+
+rcvd_clust %>%
+    ggplot(aes(y = avg_time_by_week, x = clust_group, group = clust_group)) +
+    geom_boxplot()
+# group '3' loyal not productive
+```
+
+## Mapping agent cluster with advisor performance group
+```{r mapping cluster with advisor, echo = FALSE}
+sales_clust <- data.frame("agent_code" = names(clust_group),
+                          "clust" = clust_group)
+row.names(sales_clust) <- NULL
+sales_clust_advisor_group <- merge(sales, sales_clust, by = "agent_code", 
+                                   all.x = TRUE)
+sales_clust_advisor_group <- merge(sales_clust_advisor_group, advisor_group, 
+                                   by = "amsup", all.x = TRUE)
+# check count by group
+table(sales_clust$clust)
+table(sales_clust_advisor_group$clust)
+```
 
