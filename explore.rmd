@@ -196,7 +196,7 @@ rcvd_clust <- cbind(df, clust_group)
 
 ## EDA clustering efficiency
 ```{r cluster efficiency, echo = FALSE}
-clust_sum <- sapply(split(rcvd_clust, rcvd_clust$clust_gropu), colMeans)
+clust_sum <- sapply(split(rcvd_clust, rcvd_clust$clust_group), colMeans)
 View(clust_sum)
 
 rcvd_clust %>%
@@ -239,3 +239,21 @@ table(sales_clust$clust)
 table(sales_clust_advisor_group$clust)
 ```
 
+# Analysis
+## Composition of sales type (cluster) for high performance advisor
+
+```{r sales type by advisor, echo = FALSE}
+s <- split(sales_clust_advisor_group, sales_clust_advisor_group$group)
+l <- lapply(s, FUN = function(x) {table(x[['clust']])})
+comp <- do.call(rbind, l)
+
+# percen composition of each sales type by advisor group
+prop.table(comp, 1)*100
+mosaicplot(comp, shade = TRUE, las = 2, main = "Sales type by advisor group")
+```
+
+As mosaic plot shown the different contribution sales type in each advisor group
+A+ .. B : Have 'type 5 - high performance' more than other group.
+A+ : Have 'type 2 - the inconsistant submit' or the switching code highest contribution
+Pro : Mostly contributed by 'type 3 - loyal not perform' since mostly is the new sales
+DM : Interesting contributed most the 'type 1 - the dormant'
