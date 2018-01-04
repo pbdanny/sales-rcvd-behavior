@@ -171,7 +171,7 @@ df$agent_code <- as.character(df$agent_code)
 rm(list = c("d","avg_submit_day_of_week", "prod_bundle_per", "rcvd_by_week", "recency", "time_day_of_week"))
 ```
 
-# Clustering
+# Clustering I
 ## Hierarchical
 ```{r hierarchical, echo = FALSE}
 # normalization
@@ -187,6 +187,9 @@ clust <- hclust(dist, method = "ward.D")
 
 # create clustering group by cutting tree
 # repeating choose cluster group 3, 4, 5
+plot(clust)
+rect.hclust(clust, k = 5, border = 'red')
+# Chooseing 5 group
 clust_group <- cutree(clust, k = 5)
 table(clust_group)
 
@@ -200,29 +203,60 @@ clust_sum <- sapply(split(rcvd_clust, rcvd_clust$clust_group), colMeans)
 View(clust_sum)
 
 rcvd_clust %>%
-    ggplot(aes(y = per_bundle, x = clust_group, group = clust_group)) +
-    geom_boxplot()
-# group '4' rarely bundle
+    ggplot(aes(y = avg_submit_by_week, x = diff_last, 
+               color = as.factor(clust_group))) +
+    geom_jitter(aes(shape = as.factor(clust_group), 
+                    alpha = ifelse(clust_group == '1', T, F)),
+                size = 3) +
+    scale_alpha_discrete(range = c(0.3, 1), guide = FALSE) +
+    scale_y_log10() + 
+    ggtitle(label = 'Type 1 - Little, Dormant', subtitle = 'Stop submitting for times, little submit amount')
+# group '1' dormant, little
 
 rcvd_clust %>%
-    ggplot(aes(y = Tue_time, x = clust_group, group = clust_group)) +
-    geom_boxplot()
-# group '2' in consistant submit
+    ggplot(aes(y = avg_submit_by_week, x = diff_last, 
+               color = as.factor(clust_group))) +
+    geom_jitter(aes(shape = as.factor(clust_group), 
+                    alpha = ifelse(clust_group == '2', T, F)),
+                size = 3) +
+    scale_alpha_discrete(range = c(0.3, 1), guide = FALSE) +
+    scale_y_log10() + 
+    ggtitle(label = 'Type 2 - Moderate, Continue', subtitle = 'Continuously submit, moderate submit amount')
+# group '2' continuously, moderate
 
 rcvd_clust %>%
-    ggplot(aes(y = Mon_submit, x = clust_group, group = clust_group)) +
-    geom_boxplot()
-# group '5' high performance
+    ggplot(aes(y = avg_submit_by_week, x = diff_last, 
+               color = as.factor(clust_group))) +
+    geom_jitter(aes(shape = as.factor(clust_group), 
+                    alpha = ifelse(clust_group == '3', T, F)),
+                size = 3) +
+    scale_alpha_discrete(range = c(0.3, 1), guide = FALSE) +
+    scale_y_log10() + 
+    ggtitle(label = 'Type 3 - New Active', subtitle = 'Continuously submit, little submit amount')
+# group '3' continuouly, little
 
 rcvd_clust %>%
-    ggplot(aes(y = diff_last, x = clust_group, group = clust_group)) +
-    geom_boxplot()
-# group '1' dormant
+    ggplot(aes(y = avg_submit_by_week, x = per_bundle, 
+               color = as.factor(clust_group))) +
+    geom_jitter(aes(shape = as.factor(clust_group), 
+                    alpha = ifelse(clust_group == '4', T, F)),
+                size = 3) +
+    scale_alpha_discrete(range = c(0.3, 1), guide = FALSE) +
+    scale_y_log10() +
+    ggtitle(label = 'Type 4 - Rarely bundle', subtitle = 'Rarely bundle submit, little submit amount')
+# group '4' rarely submit, little amount
 
 rcvd_clust %>%
-    ggplot(aes(y = avg_time_by_week, x = clust_group, group = clust_group)) +
-    geom_boxplot()
-# group '3' loyal not productive
+    ggplot(aes(y = avg_submit_by_week, x = diff_last, 
+               color = as.factor(clust_group))) +
+    geom_jitter(aes(shape = as.factor(clust_group), 
+                    alpha = ifelse(clust_group == '5', T, F)),
+                size = 3) +
+    scale_alpha_discrete(range = c(0.3, 1), guide = FALSE) +
+    scale_y_log10() + 
+    ggtitle(label = 'Type 5 - High, Switching', subtitle = 'Mix contiunue & dormant, high submit amount')
+# group '5' High, switching
+
 ```
 
 ## Mapping agent cluster with advisor performance group
@@ -239,7 +273,7 @@ table(sales_clust$clust)
 table(sales_clust_advisor_group$clust)
 ```
 
-# Analysis
+# Analysis I
 ## Composition of sales type (cluster) for high performance advisor
 
 ```{r sales type by advisor, echo = FALSE}
@@ -253,7 +287,7 @@ mosaicplot(comp, shade = TRUE, las = 2, main = "Sales type by advisor group")
 ```
 
 As mosaic plot shown the different contribution sales type in each advisor group
-A+ .. B : Have 'type 5 - high performance' more than other group.
-A+ : Have 'type 2 - the inconsistant submit' or the switching code highest contribution
-Pro : Mostly contributed by 'type 3 - loyal not perform' since mostly is the new sales
-DM : Interesting contributed most the 'type 1 - the dormant'
+A+ .. B : Have 'type 5 - high , switching' more than other group.
+A+ : Have 'type 2 - moderate, continue'.
+Pro : Mostly contributed by 'type 3 - New active' since mostly is the new sales, mostly bundle
+DM : Interesting contributed most the 'type 1 - little, dormant'
