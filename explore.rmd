@@ -291,3 +291,41 @@ A+ .. B : Have 'type 5 - high , switching' more than other group.
 A+ : Have 'type 2 - moderate, continue'.
 Pro : Mostly contributed by 'type 3 - New active' since mostly is the new sales, mostly bundle
 DM : Interesting contributed most the 'type 1 - little, dormant'
+
+# Clustering II
+## K-Means clustering
+```{r kmean, echo = FALSE}
+# Create distance matrix
+# normalization
+rownames(df) <- df$agent_code
+df$agent_code <- NULL
+df_norm <- as.data.frame(scale(df))
+
+# distance calculation
+dist <- dist(df_norm, method = "euclidean")
+
+# test different no of center
+c_test <- list()
+for (c in seq(1, 10)) {
+    kmc <- kmeans(dist, centers = c, iter.max = 1000)
+    c_test <- rbind(c_test, 
+                    c('center' = c, 'totss' = kmc$totss, 
+                      'tot.withinss' = kmc$tot.withinss, 
+                      'betweenss' = kmc$betweenss))
+    c_test <- as.data.frame(c_test)
+}
+# Elbow method to select best cluster
+# according to the sharp edge of decreasing total withiness sum square
+plot(x = c_test$center, y = c_test$tot.withinss, type = 'b', 
+     xaxt = 'n',  # suppress x-axis
+     main = "Elbow plot of total withiness sum square", 
+     xlab = "no of center", ylab = 'total withiness sum square')
+axis(side = 1, at = seq(1, 10))  # define x-axis
+abline(v = 4, col = "red", lty = 2)
+
+# create cluster
+kmc <- kmeans(dist, centers = 4, iter.max = 1000)
+k_clust <- kmc$cluster
+```
+
+## EDA clustering efficiency
