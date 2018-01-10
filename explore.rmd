@@ -1,4 +1,10 @@
-# Initialise Project
+---
+output: 
+  html_document:
+    keep_md: true
+---
+
+# Initialize Project
 ```{r adjust_directory_if_needed}
 # Uncomment lines below if rmd file is placed in a subdirectory
 # library(knitr)
@@ -17,21 +23,26 @@ library(ProjectTemplate); load.project()
 ```             
 
 # Explore
-## Rcvd by week of year, colored by month
+## No of app received by # week in year, colored by month
 ```{r rcvd by week of year, echo = FALSE}
 library(plotly)
 
 g <- ggplot(data = oss_rcvd,
        aes(x = no_week_of_year, fill = as.factor(month))) +
-    geom_histogram(stat = "count")
+    geom_histogram(stat = "count") +
+    ggtitle(label = "No of app submit by # of week in year, colored by month") +
+    labs(fill = "Month", x = "No of week in year", y = "No app submit")
 ggplotly(g)
 ```
 
-## Rcvd by week of year, colored by month
+## No of app rcvd by # of week in year, colored by source code
 ```{r rcvd by source code, echo = FALSE}
-g <- ggplot(data = subset(oss_rcvd),
+g <- ggplot(data = subset(oss_rcvd, source_code %in% c("OSS", "OGS", "OCS")),
             aes(x = no_week_of_year, fill = as.factor(source_code))) +
-    geom_histogram(stat = "count", position = "stack")
+    geom_histogram(stat = "count", position = "stack") +
+    ggtitle(label = "No of app rcvd by # of week in year, colored by source code") +
+    labs(fill = "Source Code", x = "No of week in year", y = "No of app rcvd") +
+    facet_grid(. ~ as.factor(source_code))
 ggplotly(g)
 ```
 
@@ -49,13 +60,19 @@ rm(list = c("rcvd_list", "recency_list"))
 
 ## Some EDA on recency
 ```{r recency EDA, echo = FALSE}
-ggplot(data = recency,
+g <- ggplot(data = recency,
        aes(x = diff_last)) +
-    geom_histogram(breaks = seq(1, 50, 1))
+    geom_histogram(breaks = seq(1, 50, 1), fill = I("blue")) +
+    ggtitle(label = "No of agent stop submitting app by # week in year") +
+    labs(x = "No of week diff from week 51", y = "No of agent stop submitting")
+ggplotly(g)
 
-ggplot(data = recency,
+g <- ggplot(data = recency,
        aes(x = diff_lag1)) +
-    geom_histogram(breaks = seq(1, 50, 1))
+    geom_histogram(breaks = seq(1, 50, 1), fill = I("green")) +
+    ggtitle(label = "No of agent stop submitting app by # week last submit") +
+    labs(x = "No of week diff from thier last submit week", y = "No of agent stop submitting")
+ggplotly(g)
 ```
 
 ## Summary by day of week (Mon = 1 .. Sun = 7)
@@ -109,8 +126,9 @@ time_day_of_week %>%
             c("Mon_time", "Tue_time", "Wed_time", "Thu_time", "Fri_time", "Sat_time"))) %>%
     ggplot(aes(x = time, color = day_of_week_f)) +
     geom_freqpoly(binwidth = 1) +
-    ggtitle(label = "Number of agent submit by time in each day of week") + 
+    ggtitle(label = "Number of agent submit break by no of time submit, color by day of week") + 
     scale_x_continuous(breaks = seq(1, 10, 1), labels = seq(1, 10, 1), limits = c(1, 20)) +
+    labs(x = "Time submit", y = "No of agent")
     ggsave(filename = "eda_1.jpeg", path = "./reports")
     
 avg_submit_day_of_week %>%
@@ -121,7 +139,8 @@ avg_submit_day_of_week %>%
     ggplot(aes(x = submit, fill = day_of_week_f)) +
     geom_histogram() +
     facet_grid(. ~ day_of_week_f) +
-    ggtitle(label = "Nubmer of agent submit by number app. in each day of week") + 
+    ggtitle(label = "Nubmer of agent submit break by number app submit, color by day of week") + 
+    labs(x = "Amount of app submitted", y = "No of agent")
     ggsave(file = "eda_2.jpeg", path = "./reports")
 ```
 
@@ -145,14 +164,14 @@ prod_bundle_per <- oss_rcvd %>%
 prod_bundle_per %>%
     filter(tt_cc > 0, tt_pl > 0) %>%
     ggplot(aes(x = per_cc)) +
-    geom_histogram() +
+    geom_histogram(fill = I("blue")) +
     ggtitle("Number of agent by Percent submit Credit Card / Total") +
     ggsave(file = "eda_3.jpeg", path = "./reports")
 
 prod_bundle_per %>%
     filter(tt_cc > 0, tt_pl > 0) %>%
     ggplot(aes(x = per_bundle)) +
-    geom_histogram() +
+    geom_histogram(fill = I("green")) +
     ggtitle("Number of agent by Percent submit Bundle / Total") +
     ggsave(file = "eda_4.jpeg", path = "./reports")
 
