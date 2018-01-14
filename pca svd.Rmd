@@ -1,0 +1,49 @@
+---
+title: "Dimansionality Reduction with PCA & SVD"
+author: "Thanakrit Danny"
+date: "1/12/2018"
+output: html_document
+---
+
+```{r load_project, echo = FALSE, message = FALSE}
+
+rm(list = ls()) # refresh workspace
+library(ProjectTemplate); load.project() # load all cached file
+# move agent_code to rownames
+rownames(df) <- df$agent_code
+df$agent_code <- NULL
+```             
+
+# PCA
+## Covarience matrix - step by step
+the **R** command *cov* produce almost idential result
+```{r pca, echo = FALSE, message = FALSE}
+# create devivation score matrix
+# sample statistic use n - 1 in calculation 
+n <- nrow(df)
+sample_n <- n - 1
+
+# square matrix of 1 with dimension = nrow of df
+isqrt <- matrix(rep(1, n*n), ncol = n, nrow = n)
+dev_score <- as.matrix(df - (isqrt %*% as.matrix(df/sample_n)))
+
+# varience - covarience matrix
+var_covar <- (t(dev_score) %*% dev_score) / sample_n
+```
+The matrix will be used in PCA calcualtion.
+
+For analysis could use *cor(df)*, result = var - cov of normalized data.
+And for visualization use *ggpairs* **Slow plot**
+```{r plot covariance, echo = TRUE, eval = FALSE}
+# covariance matrix
+# use the normalized data for dav_score calculation
+dev_score_norm <- dev_score <- as.matrix(scale(df) - (isqrt %*% as.matrix(scale(df)/sample_n)))
+var_covar_norm <- (t(dev_score_norm) %*% dev_score_norm) / sample_n
+print(var_covar_norm)
+# same as
+cor(df)
+
+# For visualization
+GGally::ggpairs(df)l
+```
+
