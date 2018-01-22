@@ -194,6 +194,7 @@ rm(list = c("d","avg_submit_day_of_week", "prod_bundle_per", "rcvd_by_week", "re
 ## Hierarchical
 ```{r hierarchical, echo = FALSE}
 # normalization
+df <- df[!is.na(df$agent_code), ]
 rownames(df) <- df$agent_code
 df$agent_code <- NULL
 df_norm <- as.data.frame(scale(df))
