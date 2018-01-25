@@ -79,10 +79,28 @@ The property of W "loading matrix" is its column ordered by eigenvalue order, ma
 
 Then the dot product of data matrix X with truncated matrix of W with first column r 
 Tr = XWr will have nxr column, Tr is the X represented in basis W
-```{r loading from igen, echo = FALSE, eval = TRUE}
-# remove na from matrix
+```{r loading, score from igen, echo = FALSE, eval = TRUE}
 
+var_covar <- cov(df)
+# remove na from matrix
 var_covar <- var_covar[c(-15,-16), c(-15,-16)]
-loading <- eigen(var_covar)
+
+# Eigen value
+eigen_value <- eigen(var_covar)$values
+# Eigen vector = 'loading' 
+eigen_vec <- eigen(var_covar)$vectors
+
+# plot eigen value,check if ordered 
+plot(eigen_value, type = 'b', main = "Eigen value plot")
+text(seq_along(eigen_value), eigen_value, 
+     formatC(eigen_value, digits = 2), pos = 3, cex = 0.7)
+
+# % Explain of each principal component (PC), cumulative sum
+print(cumsum(eigen_value)/sum(eigen_value) * 100, digits = 2)
+
+# create reduce score matrix to top 2 PCA
+df_no_calNA <- df[ ,-c(15,16)]
+score <- as.matrix(df_no_calNA) %*% eigen_vec[, 1:2]
+
 ```
 
