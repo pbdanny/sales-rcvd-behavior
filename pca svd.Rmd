@@ -44,7 +44,7 @@ var_covar <- cov(df)
 The **R** command *cor* produce = var-covariance matrix of *normalized* data; with covarience of each pairs between [-1, 1] = *correlation*
 ```{r var-cov matrix and corr matrix, echo = TRUE, eval = FALSE}
 # covariance matrix use the normalized data for dav_score calculation
-dev_score_norm <- dev_score <- as.matrix(scale(df) - (isqrt %*% as.matrix(scale(df)/sample_n)))
+dev_score_norm <- as.matrix(scale(df) - (isqrt %*% as.matrix(scale(df)/sample_n)))
 
 # var-cov of normalized data
 var_covar_norm <- (t(dev_score_norm) %*% dev_score_norm) / sample_n
@@ -66,34 +66,36 @@ Use *correlation matrix* inplace of var-covar matrix.
 Plot with package *corrplot*
 ```{r visualize corrplot, echo = FALSE, eval = TRUE}
 # corrplot work with normalizized var-covar matrix
-dev_score_norm <- dev_score <- as.matrix(scale(df) - (isqrt %*% as.matrix(scale(df)/sample_n)))
+dev_score_norm <- as.matrix(scale(df) - (isqrt %*% as.matrix(scale(df)/sample_n)))
 var_covar_norm <- (t(dev_score_norm) %*% dev_score_norm) / sample_n
 
 # plot wth library corrplot
 corrplot::corrplot(var_covar_norm)
 ```
 
-### PCA with W "loading matrix" from Eigenvalue-Eigenvector of var-cov matrix
+### PCA with W "loading matrix" from Eigenvalue-Eigenvector of var-cov matrix / correlation matrix
 
 The property of W "loading matrix" is its column ordered by eigenvalue order, magnitude of data covarience. Or the by the principal value.
 
 Then the dot product of data matrix X with truncated matrix of W with first column r 
 Tr = XWr will have nxr column, Tr is the X represented in basis W
+
+Since the unit of each features different scale, use correlation matrix ;which alrealy standardized data, to find PCA 
 ```{r loading, score from igen, echo = FALSE, eval = TRUE}
 
-var_covar <- cov(df)
+cor_mat <- cor(df)
 # remove na from matrix
-var_covar <- var_covar[c(-15,-16), c(-15,-16)]
+cor_mat <- cor_mat[c(-15,-16), c(-15,-16)]
 
 # Eigen value
-eigen_value <- eigen(var_covar)$values
+eigen_value <- eigen(cor_mat)$values
 # Eigen vector = 'loading' 
-eigen_vec <- eigen(var_covar)$vectors
+eigen_vec <- eigen(cor_mat)$vectors
 
 # plot eigen value,check if ordered 
 plot(eigen_value, type = 'b', main = "Eigen value plot")
 text(seq_along(eigen_value), eigen_value, 
-     formatC(eigen_value, digits = 2), pos = 3, cex = 0.7)
+     formatC(eigen_value, digits = 2), pos = 4, cex = 0.7)
 
 # % Explain of each principal component (PC), cumulative sum
 print(cumsum(eigen_value)/sum(eigen_value) * 100, digits = 2)
@@ -101,6 +103,20 @@ print(cumsum(eigen_value)/sum(eigen_value) * 100, digits = 2)
 # create reduce score matrix to top 2 PCA
 df_no_calNA <- df[ ,-c(15,16)]
 score <- as.matrix(df_no_calNA) %*% eigen_vec[, 1:2]
+```
 
+In **R** there is command *prcom*, with parameter *scale = TRUE* to scale data
+
+```{r prcom, echo = FALSE}
+# remove column with NA : diff_lag1, week_lag1
+# Calculate pca
+pca <- prcomp(df[,-c(15,16)], scale = TRUE)
+
+# The varience explained = std deviation ^ 2 = eigen value
+pca$sdev^2 
+eigen_value
+
+# the loading matrix, PCA in 'rotation' = eigen vector
+pca$rotation
 ```
 
