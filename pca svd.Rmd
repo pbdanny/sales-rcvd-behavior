@@ -112,11 +112,43 @@ In **R** there is command *prcom*, with parameter *scale = TRUE* to scale data
 # Calculate pca
 pca <- prcomp(df[,-c(15,16)], scale = TRUE)
 
-# The varience explained = std deviation ^ 2 = eigen value
-pca$sdev^2 
+# The varience explained = std deviation ^ 2 ~ eigen value
+pca$sdev^2
 eigen_value
 
-# the loading matrix, PCA in 'rotation' = eigen vector
-pca$rotation
+# the loading matrix = 'rotation' = eigen vector
+head(pca$rotation)
+head(eigen_vec)
 ```
 
+Summary of *PCA* properties with **summary**
+Visualized varience explained with **plot**
+Visualize each parameters correlation with PCA with **biplot**
+```{r viz pca, echo = FALSE}
+summary(pca)
+plot(pca, type = "l", main = "%Varience explained by PCAs")
+text(seq_along(pca$sdev), pca$sdev^2, 
+     sprintf("%.0f%%", pca$sdev^2/sum(pca$sdev^2)*100), pos = 4, cex = 0.7)
+
+# try hierarchical cluster 
+clust_group <- cutree(hclust(dist(scale(df), method = "euclidean"), 
+                             method = "ward.D") , k = 5)
+
+# biplot not so beautiful
+biplot(pca, scale = 0)
+
+# ggbiplot
+library(ggbiplot)
+g <- ggbiplot(pca, obs.scale = 1, var.scale = 1, group = as.factor(clust_group),
+              ellipse = TRUE, circle = TRUE)
+g <- g + scale_color_discrete(name = '')
+g <- g + coord_cartesian(xlim = c(-20, 5), ylim = c(-10, 10))
+g <- g + theme(legend.direction = 'horizontal', 
+               legend.position = 'top')
+g
+```
+
+From *biplot* 
+cluster 1 : highly correlated with amount of submission in each week.
+cluster 2 : highly correlated with frequency of submission in each week.
+There are cluster overlapping if we use only **pc1** and **pc2** in clustering. 
