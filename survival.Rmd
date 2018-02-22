@@ -1,0 +1,22 @@
+---
+title: "survival"
+author: "Thanakrit Danny"
+date: "2/23/2018"
+output: html_document
+---
+
+```{r load_project, echo = FALSE, message = FALSE}
+rm(list = ls()) # refresh workspace
+library(ProjectTemplate); load.project() # load all cached file
+```             
+
+```{r surv obj, echo = FALSE}
+library(survival)
+oss_rcvd %>%
+    trans_date <- parse_date_time(oss_rcvd$receive_date, "%d/%m/%Y %H:%M:%S") %>%
+    filter(agent_code, trans_date) %>%
+    group_by(agent_code) %>%
+    mutate(start_date = min(trans_date), end_date = min(trans_date)) -> df
+
+```
+
