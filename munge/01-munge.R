@@ -14,7 +14,7 @@
 # convert date_char to date
 
 colnames(oss_rcvd) <- tolower(names(oss_rcvd))
-oss_rcvd$date <- strptime(oss_rcvd$receive_date, format = "%d/%m/%Y %H:%M:%S")
+oss_rcvd$date <- as.Date(oss_rcvd$receive_date, format = "%d/%m/%Y %H:%M:%S")
 oss_rcvd$day_of_week <- weekdays(oss_rcvd$date, abbreviate = TRUE)
 oss_rcvd$no_week_of_year <- as.integer(format(oss_rcvd$date, format = "%W"))
 oss_rcvd$month <- format(oss_rcvd$date, format = "%m")
